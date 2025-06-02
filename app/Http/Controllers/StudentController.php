@@ -2,63 +2,37 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Student;
 use Illuminate\Http\Request;
 
 class StudentController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request)
     {
-        //
-    }
+        $query = Student::query();
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
+        if ($request->filled("student_id")) {
+            $query->where("student_id", "like", "%%", $request->student_id);
+        }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+        if ($request->filled("first_name")) {
+            $query->where("first_name", "like", "%%", $request->first_name);
+        }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
+        if ($request->filled("last_name")) {
+            $query->where("last_name", "like", "%%", $request->last_name);
+        }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
+        if ($request->filled("email")) {
+            $query->where("email", "like", "%%", $request->email);
+        }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
+        $students = $query->paginate(10)->withQueryString();
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        if ($request->wantsJson()) {
+            return response()->json($students);
+        }
+
+        return view("students.index", ["students" => $students]);
     }
 }

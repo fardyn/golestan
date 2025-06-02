@@ -2,63 +2,56 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Course;
+use App\Models\Offering;
+use App\Models\Student;
+use App\Models\Teacher;
 use Illuminate\Http\Request;
 
 class OfferingController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request)
     {
-        //
-    }
+        $query = Offering::with(["course", "teacher", "student"]);
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
+        if ($request->filled("course_id")) {
+            $query->where("course_id", $request->course_id);
+        }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+        if ($request->filled("teacher_id")) {
+            $query->where("teacher_id", $request->teacher_id);
+        }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
+        if ($request->filled("student_id")) {
+            $query->where("student_id", $request->student_id);
+        }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
+        if ($request->filled("semester")) {
+            $query->where("semester", $request->semester);
+        }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
+        if ($request->filled("status")) {
+            $query->where("status", $request->status);
+        }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        // Get data for filter dropdowns
+        $courses = Course::all();
+        $teachers = Teacher::all();
+        $students = Student::all();
+        $semesters = Offering::distinct()->pluck("semester");
+
+        $offerings = $query->paginate(10)->withQueryString();
+
+        if ($request->wantsJson()) {
+            return response()->json($offerings);
+        }
+
+        return view("offerings.index", [
+            "offerings" => $offerings,
+            "courses" => $courses,
+            "teachers" => $teachers,
+            "students" => $students,
+            "semesters" => $semesters
+        ]);
     }
 }

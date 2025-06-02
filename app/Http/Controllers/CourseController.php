@@ -2,63 +2,38 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Course;
 use Illuminate\Http\Request;
 
 class CourseController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request)
     {
-        //
-    }
+        $query = Course::query();
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
+        if ($request->filled("code")) {
+            $query->where("code", "like", "%%", $request->code);
+        }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+        if ($request->filled("name")) {
+            $query->where("name", "like", "%%", $request->name);
+        }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
+        if ($request->filled("department")) {
+            $query->where("department", $request->department);
+        }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
+        if ($request->filled("credits")) {
+            $query->where("credits", $request->credits);
+        }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
+        $departments = Course::distinct()->pluck("department");
+        $courses = $query->paginate(10)->withQueryString();
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        if ($request->wantsJson()) {
+            return response()->json($courses);
+        }
+
+        return view("courses.index", ["courses" => $courses, "departments" => $departments]);
     }
 }
