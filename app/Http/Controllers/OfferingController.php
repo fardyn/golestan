@@ -34,7 +34,47 @@ class OfferingController extends Controller
             $query->where("status", $request->status);
         }
 
+        if ($request->filled("grade")) {
+            $query->where("grade", $request->grade);
+        }
+
+        if ($request->filled("section")) {
+            $query->where("section", $request->section);
+        }
+
         $perPage = $request->input("per_page", 10);
+
+        // Get unique teachers if requested
+        $uniqueTeachers = null;
+        if ($request->filled('show_unique_teachers')) {
+            // Start with the same base query to maintain filters
+            $uniqueTeachersQuery = clone $query;
+
+            // Get the course from the first offering to ensure we're showing teachers for the right course
+            $firstOffering = $uniqueTeachersQuery->first();
+            if ($firstOffering) {
+                $uniqueTeachers = Offering::with(['course', 'teacher'])
+                    ->where('course_id', $firstOffering->course_id)
+                    ->when($request->filled('semester'), function ($q) use ($request) {
+                        $q->where('semester', $request->semester);
+                    })
+                    ->select('teacher_id', 'course_id', 'semester')
+                    ->distinct()
+                    ->get()
+                    ->map(function ($offering) {
+                        return [
+                            'teacher_id' => $offering->teacher->teacher_id,
+                            'first_name' => $offering->teacher->first_name,
+                            'last_name' => $offering->teacher->last_name,
+                            'department' => $offering->teacher->department,
+                            'title' => $offering->teacher->title,
+                            'course_code' => $offering->course->code,
+                            'course_name' => $offering->course->name,
+                            'semester' => $offering->semester
+                        ];
+                    });
+            }
+        }
 
         // Prepare search data
         $searchData = [
@@ -70,7 +110,9 @@ class OfferingController extends Controller
         return view("offerings.index", [
             "offerings" => $offerings,
             "searchData" => $searchData,
-            "perPage" => $perPage
+            "perPage" => $perPage,
+            "uniqueTeachers" => $uniqueTeachers,
+            "showUniqueTeachers" => $request->filled('show_unique_teachers')
         ]);
     }
 }

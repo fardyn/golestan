@@ -20,7 +20,7 @@ class CourseController extends Controller
         }
 
         if ($request->filled("department")) {
-            $query->where("department", $request->department);
+            $query->where("department", "like", "%" . $request->department . "%");
         }
 
         if ($request->filled("credits")) {
@@ -31,14 +31,46 @@ class CourseController extends Controller
         $departments = Course::distinct()->pluck("department");
         $courses = $query->paginate($perPage)->withQueryString();
 
-        if ($request->wantsJson()) {
+        // Prepare search data for interactive search
+        $searchData = [
+            'code' => Course::select('code as text')
+                ->distinct()
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'text' => $item->text,
+                        'search' => strtolower($item->text)
+                    ];
+                }),
+            'name' => Course::select('name as text')
+                ->distinct()
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'text' => $item->text,
+                        'search' => strtolower($item->text)
+                    ];
+                }),
+            'department' => Course::select('department as text')
+                ->distinct()
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'text' => $item->text,
+                        'search' => strtolower($item->text)
+                    ];
+                })
+        ];
+
+        if ($request->expectsJson()) {
             return response()->json($courses);
         }
 
         return view("courses.index", [
             "courses" => $courses,
             "departments" => $departments,
-            "perPage" => $perPage
+            "perPage" => $perPage,
+            "searchData" => $searchData
         ]);
     }
 }

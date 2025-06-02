@@ -27,16 +27,52 @@ class StudentController extends Controller
             $query->where("email", "like", "%" . $request->email . "%");
         }
 
-        $perPage = $request->input("per_page", 10);
-        $students = $query->paginate($perPage)->withQueryString();
+        $students = $query->paginate($request->input('per_page', 10));
 
-        if ($request->wantsJson()) {
+        // Prepare search data for interactive search
+        $searchData = [
+            'student_id' => Student::select('student_id as text')
+                ->distinct()
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'text' => $item->text,
+                        'search' => strtolower($item->text)
+                    ];
+                }),
+            'first_name' => Student::select('first_name as text')
+                ->distinct()
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'text' => $item->text,
+                        'search' => strtolower($item->text)
+                    ];
+                }),
+            'last_name' => Student::select('last_name as text')
+                ->distinct()
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'text' => $item->text,
+                        'search' => strtolower($item->text)
+                    ];
+                }),
+            'email' => Student::select('email as text')
+                ->distinct()
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'text' => $item->text,
+                        'search' => strtolower($item->text)
+                    ];
+                })
+        ];
+
+        if ($request->expectsJson()) {
             return response()->json($students);
         }
 
-        return view("students.index", [
-            "students" => $students,
-            "perPage" => $perPage
-        ]);
+        return view("students.index", compact('students', 'searchData'));
     }
 }

@@ -24,7 +24,7 @@ class TeacherController extends Controller
         }
 
         if ($request->filled("department")) {
-            $query->where("department", $request->department);
+            $query->where("department", "like", "%" . $request->department . "%");
         }
 
         if ($request->filled("title")) {
@@ -36,7 +36,47 @@ class TeacherController extends Controller
         $titles = Teacher::distinct()->pluck("title");
         $teachers = $query->paginate($perPage)->withQueryString();
 
-        if ($request->wantsJson()) {
+        // Prepare search data for interactive search
+        $searchData = [
+            'teacher_id' => Teacher::select('teacher_id as text')
+                ->distinct()
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'text' => $item->text,
+                        'search' => strtolower($item->text)
+                    ];
+                }),
+            'first_name' => Teacher::select('first_name as text')
+                ->distinct()
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'text' => $item->text,
+                        'search' => strtolower($item->text)
+                    ];
+                }),
+            'last_name' => Teacher::select('last_name as text')
+                ->distinct()
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'text' => $item->text,
+                        'search' => strtolower($item->text)
+                    ];
+                }),
+            'department' => Teacher::select('department as text')
+                ->distinct()
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'text' => $item->text,
+                        'search' => strtolower($item->text)
+                    ];
+                })
+        ];
+
+        if ($request->expectsJson()) {
             return response()->json($teachers);
         }
 
@@ -44,7 +84,8 @@ class TeacherController extends Controller
             "teachers" => $teachers,
             "departments" => $departments,
             "titles" => $titles,
-            "perPage" => $perPage
+            "perPage" => $perPage,
+            "searchData" => $searchData
         ]);
     }
 }
