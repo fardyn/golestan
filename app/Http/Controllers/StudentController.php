@@ -12,27 +12,31 @@ class StudentController extends Controller
         $query = Student::query();
 
         if ($request->filled("student_id")) {
-            $query->where("student_id", "like", "%%", $request->student_id);
+            $query->where("student_id", "like", "%" . $request->student_id . "%");
         }
 
         if ($request->filled("first_name")) {
-            $query->where("first_name", "like", "%%", $request->first_name);
+            $query->where("first_name", "like", "%" . $request->first_name . "%");
         }
 
         if ($request->filled("last_name")) {
-            $query->where("last_name", "like", "%%", $request->last_name);
+            $query->where("last_name", "like", "%" . $request->last_name . "%");
         }
 
         if ($request->filled("email")) {
-            $query->where("email", "like", "%%", $request->email);
+            $query->where("email", "like", "%" . $request->email . "%");
         }
 
-        $students = $query->paginate(10)->withQueryString();
+        $perPage = $request->input("per_page", 10);
+        $students = $query->paginate($perPage)->withQueryString();
 
         if ($request->wantsJson()) {
             return response()->json($students);
         }
 
-        return view("students.index", ["students" => $students]);
+        return view("students.index", [
+            "students" => $students,
+            "perPage" => $perPage
+        ]);
     }
 }

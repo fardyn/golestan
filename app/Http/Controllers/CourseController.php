@@ -12,11 +12,11 @@ class CourseController extends Controller
         $query = Course::query();
 
         if ($request->filled("code")) {
-            $query->where("code", "like", "%%", $request->code);
+            $query->where("code", "like", "%" . $request->code . "%");
         }
 
         if ($request->filled("name")) {
-            $query->where("name", "like", "%%", $request->name);
+            $query->where("name", "like", "%" . $request->name . "%");
         }
 
         if ($request->filled("department")) {
@@ -27,13 +27,18 @@ class CourseController extends Controller
             $query->where("credits", $request->credits);
         }
 
+        $perPage = $request->input("per_page", 10);
         $departments = Course::distinct()->pluck("department");
-        $courses = $query->paginate(10)->withQueryString();
+        $courses = $query->paginate($perPage)->withQueryString();
 
         if ($request->wantsJson()) {
             return response()->json($courses);
         }
 
-        return view("courses.index", ["courses" => $courses, "departments" => $departments]);
+        return view("courses.index", [
+            "courses" => $courses,
+            "departments" => $departments,
+            "perPage" => $perPage
+        ]);
     }
 }

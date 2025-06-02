@@ -2,39 +2,42 @@
 
 namespace Database\Factories;
 
-use App\Models\Course;
 use App\Models\Offering;
-use App\Models\Student;
+use App\Models\Course;
 use App\Models\Teacher;
+use App\Models\Student;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class OfferingFactory extends Factory
 {
     protected $model = Offering::class;
 
+    private $semesters = [
+        'Fall 2024',
+        'Spring 2024',
+        'Summer 2024',
+        'Fall 2023',
+        'Spring 2023',
+        'Summer 2023'
+    ];
+
+    private $sections = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+    private $statuses = ['active', 'completed', 'dropped'];
+
     public function definition(): array
     {
-        $semesters = [
-            "Fall 2023",
-            "Spring 2024",
-            "Fall 2024",
-            "Spring 2025"
-        ];
-
-        $statuses = ["enrolled", "completed", "dropped"];
-        $status = $this->faker->randomElement($statuses);
-
-        // Only generate grades for completed courses
-        $grade = $status === "completed" ? $this->faker->randomFloat(2, 60, 100) : null;
+        $semester = $this->faker->randomElement($this->semesters);
+        $status = $this->faker->randomElement($this->statuses);
+        $grade = $status === 'completed' ? $this->faker->randomFloat(2, 60, 100) : null;
 
         return [
-            "course_id" => Course::factory(),
-            "teacher_id" => Teacher::factory(),
-            "student_id" => Student::factory(),
-            "semester" => $this->faker->randomElement($semesters),
-            "section" => $this->faker->randomElement(["A", "B", "C", "D"]),
-            "status" => $status,
-            "grade" => $grade
+            'course_id' => Course::inRandomOrder()->first()->id,
+            'teacher_id' => Teacher::inRandomOrder()->first()->id,
+            'student_id' => Student::inRandomOrder()->first()->id,
+            'semester' => $semester,
+            'section' => $this->faker->randomElement($this->sections),
+            'status' => $status,
+            'grade' => $grade
         ];
     }
 }

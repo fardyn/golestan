@@ -7,7 +7,7 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\OfferingController;
 
 Route::get("/", function () {
-    return redirect()->route("courses.index");
+    return view("landing");
 });
 
 Route::resource("courses", CourseController::class);

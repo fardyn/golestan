@@ -12,15 +12,15 @@ class TeacherController extends Controller
         $query = Teacher::query();
 
         if ($request->filled("teacher_id")) {
-            $query->where("teacher_id", "like", "%%", $request->teacher_id);
+            $query->where("teacher_id", "like", "%" . $request->teacher_id . "%");
         }
 
         if ($request->filled("first_name")) {
-            $query->where("first_name", "like", "%%", $request->first_name);
+            $query->where("first_name", "like", "%" . $request->first_name . "%");
         }
 
         if ($request->filled("last_name")) {
-            $query->where("last_name", "like", "%%", $request->last_name);
+            $query->where("last_name", "like", "%" . $request->last_name . "%");
         }
 
         if ($request->filled("department")) {
@@ -31,9 +31,10 @@ class TeacherController extends Controller
             $query->where("title", $request->title);
         }
 
+        $perPage = $request->input("per_page", 10);
         $departments = Teacher::distinct()->pluck("department");
         $titles = Teacher::distinct()->pluck("title");
-        $teachers = $query->paginate(10)->withQueryString();
+        $teachers = $query->paginate($perPage)->withQueryString();
 
         if ($request->wantsJson()) {
             return response()->json($teachers);
@@ -42,7 +43,8 @@ class TeacherController extends Controller
         return view("teachers.index", [
             "teachers" => $teachers,
             "departments" => $departments,
-            "titles" => $titles
+            "titles" => $titles,
+            "perPage" => $perPage
         ]);
     }
 }

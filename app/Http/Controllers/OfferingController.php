@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Course;
 use App\Models\Offering;
-use App\Models\Student;
+use App\Models\Course;
 use App\Models\Teacher;
+use App\Models\Student;
 use Illuminate\Http\Request;
 
 class OfferingController extends Controller
@@ -34,13 +34,34 @@ class OfferingController extends Controller
             $query->where("status", $request->status);
         }
 
-        // Get data for filter dropdowns
-        $courses = Course::all();
-        $teachers = Teacher::all();
-        $students = Student::all();
-        $semesters = Offering::distinct()->pluck("semester");
+        $perPage = $request->input("per_page", 10);
 
-        $offerings = $query->paginate(10)->withQueryString();
+        // Prepare search data
+        $searchData = [
+            'course' => Course::select('id', 'code', 'name')->get()->map(function ($course) {
+                return [
+                    'id' => $course->id,
+                    'text' => $course->code . ' - ' . $course->name,
+                    'search' => strtolower($course->code . ' ' . $course->name)
+                ];
+            }),
+            'teacher' => Teacher::select('id', 'teacher_id', 'first_name', 'last_name')->get()->map(function ($teacher) {
+                return [
+                    'id' => $teacher->id,
+                    'text' => $teacher->teacher_id . ' - ' . $teacher->first_name . ' ' . $teacher->last_name,
+                    'search' => strtolower($teacher->teacher_id . ' ' . $teacher->first_name . ' ' . $teacher->last_name)
+                ];
+            }),
+            'student' => Student::select('id', 'student_id', 'first_name', 'last_name')->get()->map(function ($student) {
+                return [
+                    'id' => $student->id,
+                    'text' => $student->student_id . ' - ' . $student->first_name . ' ' . $student->last_name,
+                    'search' => strtolower($student->student_id . ' ' . $student->first_name . ' ' . $student->last_name)
+                ];
+            })
+        ];
+
+        $offerings = $query->paginate($perPage)->withQueryString();
 
         if ($request->wantsJson()) {
             return response()->json($offerings);
@@ -48,10 +69,8 @@ class OfferingController extends Controller
 
         return view("offerings.index", [
             "offerings" => $offerings,
-            "courses" => $courses,
-            "teachers" => $teachers,
-            "students" => $students,
-            "semesters" => $semesters
+            "searchData" => $searchData,
+            "perPage" => $perPage
         ]);
     }
 }

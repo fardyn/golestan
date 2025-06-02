@@ -8,17 +8,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Offering extends Model
 {
     protected $fillable = [
-        "course_id",
-        "teacher_id",
-        "student_id",
-        "semester",
-        "section",
-        "status",
-        "grade"
-    ];
-
-    protected $casts = [
-        "grade" => "decimal:2"
+        'course_id',
+        'teacher_id',
+        'student_id',
+        'semester',
+        'section',
+        'status',
+        'grade'
     ];
 
     public function course(): BelongsTo
